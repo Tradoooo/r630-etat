@@ -1,11 +1,12 @@
 # Installation côté serveur
 
-Deux services systemd **user** (aucun droit root nécessaire pour les installer),
-plus une commande `sudo` unique pour l'exposition publique. Testé sur Debian 13,
-80 cœurs, 32 Go de RAM, sans `sudo` disponible pour l'utilisateur courant.
+Deux services systemd **user** (aucun droit root nécessaire pour les installer).
+Testé sur Debian 13, 80 cœurs, 32 Go de RAM.
 
-Remplacer ci-dessous `100.124.18.48` par l'IP Tailscale du serveur et
-`r630-debian.tail3a8bdf.ts.net` par son nom MagicDNS.
+Remplacer ci-dessous `100.124.18.48` par l'IP Tailscale du serveur. L'exposition
+publique passe par le Tailscale Funnel d'une machine du tailnet (section 3) :
+aucune commande `sudo` n'est nécessaire si ce Funnel est déjà établi et le compte
+opérateur Tailscale.
 
 ## 1. Netdata, sans root
 

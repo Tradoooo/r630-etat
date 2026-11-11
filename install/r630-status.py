@@ -23,7 +23,7 @@ Deux particularités de l'API Netdata à connaître avant de modifier ce fichier
     reste juste si `idle` réapparaît un jour.
 
 Installation : service systemd user `r630-status.service` sur le r630, exposé
-par Tailscale Serve/Funnel sur https://r630-debian.tail3a8bdf.ts.net/r630/.
+publiquement via un Tailscale Funnel relayé (voir install/README.md).
 Contrat consommé par la page GitHub Pages du dépôt `r630-etat`.
 """
 from __future__ import annotations
