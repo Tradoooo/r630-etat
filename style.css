@@ -1,0 +1,236 @@
+/* r630 — état du serveur. Thème sombre, aucune dépendance externe.
+   Palette alignée sur les seuils utilisés dans app.js (niveau()). */
+
+:root {
+  --fond: #0d1117;
+  --carte: #161b22;
+  --bord: #21262d;
+  --texte: #e6edf3;
+  --discret: #8b949e;
+  --accent: #58a6ff;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --crit: #f85149;
+  --rayon: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+}
+
+/* ---------- en-tête ---------- */
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bord);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.entete h1 {
+  font-size: 1.35rem;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.hote { color: var(--accent); }
+
+.sous-titre {
+  margin: 4px 0 0;
+  color: var(--discret);
+  font-size: 0.86rem;
+}
+
+.entete-etat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--discret);
+  font-variant-numeric: tabular-nums;
+}
+
+.pastille {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--discret);
+  flex: none;
+}
+
+.pastille.vivant { background: var(--ok); box-shadow: 0 0 0 3px rgba(63, 185, 80, .18); }
+.pastille.mort { background: var(--crit); }
+
+/* ---------- alertes ---------- */
+
+.alertes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+
+.alerte {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.alerte b { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.alerte.warning { color: var(--warn); border-color: rgba(210, 153, 34, .45); background: rgba(210, 153, 34, .1); }
+.alerte.critical { color: var(--crit); border-color: rgba(248, 81, 73, .45); background: rgba(248, 81, 73, .1); }
+
+/* ---------- grille des cartes ---------- */
+
+.grille {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) { .grille { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .grille { grid-template-columns: repeat(4, 1fr); } }
+
+.carte {
+  background: var(--carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  padding: 14px 15px 10px;
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+}
+
+.carte h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--discret);
+  font-weight: 600;
+}
+
+.valeur {
+  margin: 6px 0 0;
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.unite { font-size: 1rem; color: var(--discret); margin-left: 3px; font-weight: 500; }
+
+.detail {
+  margin: 6px 0 0;
+  font-size: 0.79rem;
+  color: var(--discret);
+  min-height: 2.3em;
+}
+
+/* jauge fine sous la valeur */
+
+.jauge {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bord);
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.jauge > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width .5s ease, background-color .5s ease;
+}
+
+.spark { margin-top: auto; padding-top: 10px; }
+.spark svg { display: block; width: 100%; height: 44px; overflow: visible; }
+.spark .trait { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.spark .aire { stroke: none; opacity: .16; }
+
+/* couleur par niveau, partagée valeur + jauge + sparkline */
+
+.n-ok .valeur, .n-ok .trait { color: var(--texte); stroke: var(--ok); }
+.n-warn .valeur, .n-warn .trait { color: var(--warn); stroke: var(--warn); }
+.n-crit .valeur, .n-crit .trait { color: var(--crit); stroke: var(--crit); }
+.n-ok .jauge > i { background: var(--ok); }
+.n-warn .jauge > i { background: var(--warn); }
+.n-crit .jauge > i { background: var(--crit); }
+.n-ok .aire { fill: var(--ok); }
+.n-warn .aire { fill: var(--warn); }
+.n-crit .aire { fill: var(--crit); }
+
+/* ---------- pression ---------- */
+
+.secondaire {
+  margin-top: 12px;
+  background: var(--carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  padding: 4px 15px;
+}
+
+.ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--bord);
+  font-size: 0.9rem;
+}
+
+.ligne:last-child { border-bottom: 0; }
+.ligne em { color: var(--discret); font-style: normal; font-size: 0.8rem; }
+
+.ligne b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* ---------- pied ---------- */
+
+.pied {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bord);
+  color: var(--discret);
+  font-size: 0.8rem;
+}
+
+.pied p { margin: 0 0 6px; }
+.pied a { color: var(--accent); text-decoration: none; }
+.pied a:hover, .pied a:focus { text-decoration: underline; }
+.note { max-width: 62ch; }
+
+#pied-maj { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jauge > i { transition: none; }
+}

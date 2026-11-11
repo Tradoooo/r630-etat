@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>r630 — état du serveur en temps réel</title>
+<meta name="description" content="État public du serveur r630 : CPU, mémoire, disque, charge et alertes, relevés toutes les 10 secondes.">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-titre">
+    <h1><span class="hote" id="hote">r630</span> — état du serveur</h1>
+    <p class="sous-titre">CPU, mémoire, disque et charge, relevés toutes les 10 secondes.</p>
+  </div>
+  <div class="entete-etat" aria-live="polite">
+    <span class="pastille" id="pastille" aria-hidden="true"></span>
+    <span id="etat-texte">connexion…</span>
+  </div>
+</header>
+
+<section class="alertes" id="alertes" hidden aria-label="Alertes actives"></section>
+
+<main class="grille">
+  <article class="carte" id="carte-cpu">
+    <h2>CPU</h2>
+    <p class="valeur"><span id="cpu-valeur">—</span><span class="unite">%</span></p>
+    <div class="jauge" aria-hidden="true"><i></i></div>
+    <p class="detail" id="cpu-detail">—</p>
+    <div class="spark" id="spark-cpu" role="img" aria-label="Utilisation du CPU sur 60 minutes"></div>
+  </article>
+
+  <article class="carte" id="carte-ram">
+    <h2>Mémoire</h2>
+    <p class="valeur"><span id="ram-valeur">—</span><span class="unite">%</span></p>
+    <div class="jauge" aria-hidden="true"><i></i></div>
+    <p class="detail" id="ram-detail">—</p>
+    <div class="spark" id="spark-ram" role="img" aria-label="Mémoire utilisée sur 60 minutes"></div>
+  </article>
+
+  <article class="carte" id="carte-disque">
+    <h2>Disque</h2>
+    <p class="valeur"><span id="disque-valeur">—</span><span class="unite">%</span></p>
+    <div class="jauge" aria-hidden="true"><i></i></div>
+    <p class="detail" id="disque-detail">—</p>
+    <div class="spark" id="spark-disque" role="img" aria-label="Espace disque utilisé sur 60 minutes"></div>
+  </article>
+
+  <article class="carte" id="carte-charge">
+    <h2>Charge</h2>
+    <p class="valeur"><span id="charge-valeur">—</span></p>
+    <div class="jauge" aria-hidden="true"><i></i></div>
+    <p class="detail" id="charge-detail">—</p>
+    <div class="spark" id="spark-charge" role="img" aria-label="Charge moyenne sur 60 minutes"></div>
+  </article>
+</main>
+
+<section class="secondaire" aria-label="Pression et activité du disque">
+  <div class="ligne"><span>Pression CPU <em>(temps bloqué)</em></span><b id="pression-cpu">—</b></div>
+  <div class="ligne"><span>Pression disque <em>(temps bloqué)</em></span><b id="pression-io">—</b></div>
+  <div class="ligne"><span>Activité disque</span><b id="io-util">—</b></div>
+</section>
+
+<footer class="pied">
+  <p id="pied-maj">—</p>
+  <p class="note">
+    Seules ces mesures sont publiées : ni modèle du serveur, ni version du système,
+    ni adresses réseau, ni noms de processus.
+    <a href="https://github.com/BaptisteFaisy/r630-etat">Code et installation</a>.
+  </p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

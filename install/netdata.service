@@ -1,0 +1,25 @@
+[Unit]
+Description=Netdata r630 (mode utilisateur, namespace prive) - CPU/RAM/disque temps reel
+Documentation=http://100.124.18.48:19999
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=HOME=%h
+Environment=NETDATA_PREFIX=%h/opt/netdata
+ExecStart=/usr/bin/unshare -Urm --propagation private %h/opt/netdata/bin/netdata-ns -D
+Restart=always
+RestartSec=5
+
+# Le r630 est sature par les runners GitHub Actions : netdata passe apres.
+Nice=10
+CPUWeight=60
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+MemoryHigh=2G
+MemoryMax=4G
+TasksMax=4096
+
+[Install]
+WantedBy=default.target

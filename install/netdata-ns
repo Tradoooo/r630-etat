@@ -1,0 +1,23 @@
+#!/bin/sh
+# Monte l'installation réelle sur /opt/netdata dans un namespace privé, puis
+# lance Netdata. Appelé par le service systemd user ainsi :
+#
+#   unshare -Urm --propagation private <ce script> -D
+#
+# Pourquoi : le static build officiel est compilé pour /opt/netdata et vérifie
+# son existence au démarrage (verify_required_directory(), fatale sinon). Or
+# /opt appartient à root sur cette machine et il n'y a pas de sudo disponible.
+# On masque donc /opt par un tmpfs dans CE namespace uniquement, puis on y bind
+# l'installation réelle. Rien n'est créé ni visible côté hôte.
+#
+# NE JAMAIS retirer --propagation private de l'appelant : sans lui, le tmpfs
+# monté sur /opt se propagerait à tout le système.
+set -eu
+
+PREFIX="${NETDATA_PREFIX:-/home/baptiste/opt/netdata}"
+
+mount -t tmpfs tmpfs /opt
+mkdir -p /opt/netdata
+mount --bind "$PREFIX" /opt/netdata
+
+exec /opt/netdata/bin/netdata-user "$@"

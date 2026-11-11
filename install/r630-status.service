@@ -1,0 +1,21 @@
+[Unit]
+Description=r630-status - proxy filtre qui expose un etat minimal du r630
+Documentation=https://github.com/BaptisteFaisy/r630-etat
+After=netdata.service
+Wants=netdata.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/opt/r630-status/r630-status.py
+Restart=always
+RestartSec=5
+
+# Encore plus discret que Netdata : ce service ne fait que lire un cache.
+Nice=15
+CPUWeight=40
+MemoryMax=256M
+TasksMax=64
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,23 @@
+#!/bin/sh
+# Lance Netdata en mode utilisateur (sans root) sur le r630.
+#
+# Le static build officiel est compilé pour /opt/netdata et ignore les variables
+# NETDATA_*_DIR : tous les chemins sont donc posés dans etc/netdata/netdata.conf
+# (clés `[global] * directory`), que ce launcher passe explicitement avec -c.
+#
+# Usage : netdata-user [-D] [options netdata...]   (-c gagne s'il est déjà donné)
+
+PREFIX="${NETDATA_PREFIX:-$HOME/opt/netdata}"
+CONF="$PREFIX/etc/netdata/netdata.conf"
+
+export PATH="$PREFIX/bin:$PATH"
+export NETDATA_BASH_LOADABLES="DISABLE"
+
+mkdir -p "$PREFIX/var/lib/netdata" "$PREFIX/var/cache/netdata" \
+         "$PREFIX/var/log/netdata" "$PREFIX/var/run"
+
+case " $* " in
+    *" -c "*) exec "$PREFIX/bin/srv/netdata" "$@" ;;
+esac
+
+exec "$PREFIX/bin/srv/netdata" -c "$CONF" -u "$(id -un)" "$@"
