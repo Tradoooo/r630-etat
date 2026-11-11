@@ -1,0 +1,17 @@
+[Unit]
+Description=Relais TCP local vers le proxy d'etat du r630 (relais du Tailscale Funnel)
+Documentation=https://github.com/BaptisteFaisy/r630-etat
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Tailscale Funnel ne relaie que vers la machine locale : ce relais TCP fait le
+# pont entre le funnel (ici) et le proxy r630-status qui tourne sur le serveur.
+# Port local 18814 -> 100.124.18.48:8814 (IP Tailscale du r630).
+ExecStart=/usr/bin/socat TCP-LISTEN:18814,fork,reuseaddr TCP:100.124.18.48:8814
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -52,6 +52,7 @@ Netdata. Rien n'est créé ni visible côté hôte.
 | `netdata.service` | `~/.config/systemd/user/` |
 | `r630-status.py` | `~/opt/r630-status/` (exécutable) |
 | `r630-status.service` | `~/.config/systemd/user/` |
+| `r630-relais.service` | `~/.config/systemd/user/` — sur la **machine du Funnel**, pas sur le serveur |
 
 Les deux fichiers `.service` contiennent des chemins absolus vers le home :
 les adapter si le compte n'est pas `/home/baptiste`.
@@ -64,25 +65,45 @@ loginctl enable-linger "$USER"    # déjà actif ici : les services survivent au
 
 ## 3. Exposition publique
 
-Netdata et le proxy n'écoutent **que** sur loopback (et sur l'IP Tailscale pour
-Netdata). C'est Tailscale Funnel qui publie le proxy :
+Trajet : Internet → Tailscale Funnel (machine du tailnet) → relais TCP local →
+proxy `r630-status` sur le serveur. `sudo` n'est nécessaire que si le Funnel n'est
+pas déjà établi ni le compte opérateur Tailscale (`sudo tailscale set
+--operator=$USER`, une fois).
 
-```sh
-sudo tailscale serve --bg --https=443 --set-path=/r630 http://127.0.0.1:8814
-```
+1. Sur le serveur, vérifier que le proxy écoute sur son IP Tailscale
+   (`ss -tln | grep 8814` doit montrer `100.x.x.x:8814`, pas `127.0.0.1`) —
+   c'est `adresse_ecoute()` dans `r630-status.py` qui s'en charge au démarrage.
+2. Sur la machine qui porte le Funnel, poser le relais (pas de sudo) :
+   `cp r630-relais.service ~/.config/systemd/user/` puis
+   `systemctl --user daemon-reload && systemctl --user enable --now r630-relais`.
+   Ce `socat` écoute sur `127.0.0.1:18814` et transmet à `100.124.18.48:8814`.
+3. Sur cette même machine, ajouter le chemin **puis restaurer le Funnel** —
+   `tailscale serve` le désactive à chaque modification, il faut donc
+   impérativement terminer par `tailscale funnel` :
 
-`tailscale serve` exige root : soit la commande ci-dessus, soit
-`sudo tailscale set --operator=$USER` une fois pour toutes. Tailscale retire le
-préfixe `/r630` avant de transmettre, donc le proxy reçoit bien `/status.json`.
+   ```sh
+   tailscale serve --bg --https=8443 --set-path=/r630 http://127.0.0.1:18814
+   tailscale funnel --bg --https=8443 --yes http://127.0.0.1:8000
+   ```
 
-Le funnel doit déjà être actif sur le nœud (`tailscale funnel status`). Un
-chemin ajouté ne touche pas aux chemins existants.
+   La seconde commande réactive le Funnel pour le service déjà exposé sur `/`
+   (remplacer `8000` par le port racine existant) et le propage au chemin `/r630`.
+   Vérifier : `tailscale serve status` doit montrer `Funnel on` avec `/` et `/r630`.
+4. Vérifier le **contenu** (jamais le seul code HTTP : un chemin catch-all
+   répond 200 avec du HTML) :
+
+   ```sh
+   curl -s https://<machine>.tail3a8bdf.ts.net:8443/r630/status.json | head -c 60
+   ```
+
+> `tailscale serve` ne relaie que vers la machine locale : proxyser directement
+> une IP du tailnet se solde par un timeout sans aucune réponse — d'où le relais.
 
 ## 4. Vérification
 
 ```sh
 systemctl --user is-active netdata.service r630-status.service
-curl -s http://127.0.0.1:8814/healthz                       # {"ok": true}
+curl -s http://$(tailscale ip -4):8814/healthz                # {"ok": true}
 curl -s http://127.0.0.1:8814/api/v1/charts                 # {"erreur": "route inconnue"}
 curl -s https://<nom-tailscale>/r630/status.json | head -c 200
 ls /opt ; grep -c " /opt " /proc/mounts                      # hôte intact : 0 montage
@@ -132,9 +153,19 @@ dimension `idle` (d'où un calcul par somme des dimensions non oisives).
 
 ## 7. Désinstallation
 
+Sur le serveur :
+
 ```sh
 systemctl --user disable --now r630-status.service netdata.service
-sudo tailscale serve --https=443 --set-path=/r630 off
 rm -rf ~/opt/netdata ~/opt/r630-status \
        ~/.config/systemd/user/{netdata,r630-status}.service
+```
+
+Sur la machine du Funnel :
+
+```sh
+systemctl --user disable --now r630-relais.service
+rm -f ~/.config/systemd/user/r630-relais.service
+tailscale serve --https=8443 --set-path=/r630 off
+tailscale funnel --bg --https=8443 --yes http://127.0.0.1:8000  # garde la racine publique
 ```

@@ -7,7 +7,7 @@
    Test local : ouvrir index.html?api=mock.json */
 
 const API_URL = new URLSearchParams(location.search).get('api')
-  || 'https://r630-debian.tail3a8bdf.ts.net/r630/status.json';
+  || 'https://baptiste-ms-7d18.tail3a8bdf.ts.net:8443/r630/status.json';
 
 const REFRESH_MS = 10000;
 const OBSOLETE_APRES_S = 90;

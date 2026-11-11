@@ -29,6 +29,7 @@ Contrat consommé par la page GitHub Pages du dépôt `r630-etat`.
 from __future__ import annotations
 
 import json
+import subprocess
 import threading
 import time
 import urllib.request
@@ -364,12 +365,33 @@ class Gestionnaire(BaseHTTPRequestHandler):
     do_HEAD = do_GET
 
 
+def adresse_ecoute() -> str:
+    """IP Tailscale du serveur, pour que le relais Funnel du PC puisse joindre
+    ce proxy sans l'exposer sur le LAN physique.
+
+    Repli sur loopback si Tailscale ne répond pas : le service reste sain et
+    joignable en local, le relais public est alors simplement hors service.
+    """
+    try:
+        sortie = subprocess.run(
+            ["tailscale", "ip", "-4"], capture_output=True,
+            text=True, timeout=10, check=False)
+        ips = [l.strip() for l in sortie.stdout.splitlines() if l.strip()]
+        if ips:
+            return ips[0]
+    except Exception:
+        pass
+    return "127.0.0.1"
+
+
 def main() -> None:
     collecteur = Collecteur()
     collecteur.start()
     Gestionnaire.collecteur = collecteur
-    serveur = ThreadingHTTPServer(("127.0.0.1", PORT), Gestionnaire)
+    adresse = adresse_ecoute()
+    serveur = ThreadingHTTPServer((adresse, PORT), Gestionnaire)
     serveur.daemon_threads = True
+    print(f"r630-status en écoute sur {adresse}:{PORT}", flush=True)
     try:
         serveur.serve_forever()
     except KeyboardInterrupt:

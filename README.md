@@ -5,7 +5,7 @@ disque, charge, pression IO et alertes. Relevés toutes les 10 secondes, histori
 des 60 dernières minutes.
 
 **Page** : <https://baptistefaisy.github.io/r630-etat/>
-**Source des données** : <https://r630-debian.tail3a8bdf.ts.net/r630/status.json>
+**Source des données** : <https://baptiste-ms-7d18.tail3a8bdf.ts.net:8443/r630/status.json>
 
 Aucune dépendance externe : pas de framework, pas de CDN, pas de police tierce,
 pas d'analytics. HTML, CSS et JavaScript vanilla, graphes en SVG dessinés à la
@@ -17,17 +17,23 @@ main. La page fonctionne hors ligne une fois chargée (les données en moins).
 Netdata (r630, 127.0.0.1:19999, privé)
         │  lecture locale seule
         ▼
-r630-status.py (r630, 127.0.0.1:8814, privé)   ← proxy filtré, liste blanche
+r630-status.py (r630, 100.124.18.48:8814, tailnet)   ← proxy filtré, liste blanche
         │  cache rafraîchi toutes les 10 s
         ▼
-Tailscale Serve/Funnel  →  https://r630-debian.tail3a8bdf.ts.net/r630/status.json
+r630-relais.service (machine du Funnel, 127.0.0.1:18814)   ← relais TCP socat
+        │
+        ▼
+Tailscale Funnel  →  https://baptiste-ms-7d18.tail3a8bdf.ts.net:8443/r630/status.json
         │  HTTPS, public
         ▼
 Cette page (GitHub Pages)  →  fetch toutes les 10 s
 ```
 
-Netdata reste **strictement privé** : il n'écoute que sur loopback et sur l'IP
-Tailscale. Seul le proxy est exposé, et il ne sert qu'un JSON au contrat fixe.
+Netdata reste **strictement privé** (loopback + IP Tailscale). Le proxy n'écoute
+que sur l'IP Tailscale du serveur, jamais sur son LAN physique. Tailscale Funnel
+ne relayant que vers une machine locale, un relais TCP `socat` fait le pont entre
+la machine qui porte le Funnel et le proxy : voir `install/r630-relais.service`.
+Il ne sert qu'un JSON au contrat fixe, sans route de relais vers Netdata.
 
 ## Ce qui est publié — et ce qui ne l'est pas
 
